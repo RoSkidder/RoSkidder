@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RoSkidder - The Ultimate Roblox Extension</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#061019; --card:#0e1620; --glass: rgba(255,255,255,0.03);
+  --accent1:#00d2ff; --accent2:#6a5cff; --accent3:#ff7adf; --muted:#98a2b3; --white:#eaf4ff;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif}
+html{scroll-behavior:smooth}
+body{background:radial-gradient(circle at 10% 10%, rgba(0,210,255,0.03), transparent 10%), linear-gradient(180deg,#04101a 0%, #071827 60%, #02101a 100%);color:var(--white);min-height:100vh;overflow-x:hidden}
+
+/* Ambient animated blobs (morphing) */
+.bg-blobs{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.blob{position:absolute;border-radius:40%;filter:blur(80px);opacity:0.55;mix-blend-mode:screen;transform-origin:center}
+.blob.a{width:720px;height:720px;left:-12%;top:-12%;background:linear-gradient(135deg,var(--accent1),var(--accent2));animation:blobMove 14s ease-in-out infinite}
+.blob.b{width:520px;height:520px;right:-8%;top:6%;background:linear-gradient(135deg,var(--accent3),var(--accent2));animation:blobMove 11s ease-in-out infinite;animation-delay:2s}
+.blob.c{width:360px;height:360px;left:22%;bottom:-6%;background:linear-gradient(135deg,#00ffd5,#00a3ff);animation:blobMove 10s ease-in-out infinite;animation-delay:4s}
+@keyframes blobMove{0%{transform:translateY(0) rotate(0) scale(1)}50%{transform:translateY(22px) rotate(6deg) scale(1.06)}100%{transform:translateY(0) rotate(0) scale(1)}}
+
+/* Header */
+header{position:fixed;top:0;left:0;width:100%;display:flex;justify-content:space-between;align-items:center;padding:16px 36px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,0.03);z-index:60}
+.logo{display:flex;gap:12px;align-items:center}
+.logo img{width:52px;height:52px;border-radius:12px;box-shadow:0 12px 40px rgba(0,210,255,0.12);animation:float 3s infinite ease-in-out}
+.logo h1{font-size:18px;font-weight:800;color:var(--white);letter-spacing:0.6px}
+nav a{color:var(--muted);text-decoration:none;margin-left:18px;font-weight:700;position:relative}
+nav a::after{content:'';position:absolute;left:0;bottom:-6px;height:3px;width:0;background:linear-gradient(90deg,var(--accent1),var(--accent2));transition:width .28s}
+nav a:hover{color:var(--white)}nav a:hover::after{width:100%}
+
+/* Hero */
+.hero{padding:140px 20px 80px;max-width:1200px;margin:0 auto;position:relative;z-index:20}
+.hero-inner{display:grid;grid-template-columns:1fr 460px;gap:30px;align-items:center}
+.title{font-size:52px;line-height:1.02;font-weight:800;background:linear-gradient(90deg,var(--accent1),var(--accent2));-webkit-background-clip:text;color:transparent}
+.subtitle{font-size:18px;color:var(--muted);margin-top:10px}
+.typewriter{font-weight:700;color:transparent;background:linear-gradient(90deg,var(--accent1),var(--accent3));-webkit-background-clip:text}
+
+/* Buttons - richer animations */
+.cta-row{display:flex;gap:14px;align-items:center;margin-top:20px}
+.btn{padding:12px 26px;border-radius:999px;border:none;cursor:pointer;font-weight:800;letter-spacing:0.4px;position:relative;overflow:hidden}
+/* main gradient button with animated background slide and glow */
+.btn-primary{background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#02131b;box-shadow:0 14px 40px rgba(106,92,255,0.12);transform:translateZ(0);transition:transform .18s ease, box-shadow .18s ease}
+.btn-primary:focus{outline:none}
+.btn-primary:hover{transform:translateY(-6px) scale(1.02);box-shadow:0 24px 60px rgba(0,210,255,0.16)}
+/* animated gradient overlay */
+.btn-primary::before{content:'';position:absolute;inset:0;background:linear-gradient(120deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));mix-blend-mode:overlay;opacity:0;transition:opacity .25s}
+.btn-primary:hover::before{opacity:1}
+.btn-primary::after{content:'';position:absolute;left:-60%;top:0;width:40%;height:100%;background:linear-gradient(90deg, rgba(255,255,255,0.18), rgba(255,255,255,0));transform:skewX(-20deg);transition:left .6s}
+.btn-primary:hover::after{left:120%}
+.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--white);transition:transform .18s}
+.btn-ghost:hover{transform:translateY(-4px)}
+
+/* particle used for button hover effect */
+.particle{position:absolute;border-radius:50%;pointer-events:none;mix-blend-mode:screen}
+@keyframes particleMove{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-26px) scale(.4)}}
+
+/* Right download card with animated screenshot carousel */
+.download-card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:16px;padding:18px;box-shadow:0 10px 40px rgba(2,10,20,0.6);position:relative}
+.app-name{display:flex;align-items:center;gap:12px}
+.app-name h3{font-size:18px}
+.meta{display:flex;gap:12px;margin-top:8px;color:var(--muted);font-size:13px}
+.screenshot-viewport{margin-top:14px;width:100%;height:160px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.03)}
+.carousel{display:flex;height:100%;width:300%;transition:transform .9s cubic-bezier(.22,.9,.28,1)}
+.carousel .frame{flex:0 0 33.333%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#071827,#0a2436);color:var(--muted);font-weight:700}
+.carousel-controls{display:flex;gap:8px;margin-top:10px;justify-content:center}
+.dot{width:8px;height:8px;border-radius:999px;background:rgba(255,255,255,0.06);cursor:pointer}
+.dot.active{background:linear-gradient(90deg,var(--accent1),var(--accent2))}
+
+/* features */
+section{padding:80px 20px}
+.features{max-width:1200px;margin:0 auto;position:relative;z-index:10}
+.features h2{font-size:34px;margin-bottom:26px;background:linear-gradient(90deg,var(--accent1),var(--accent2));-webkit-background-clip:text;color:transparent}
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px}
+.card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:22px;border-radius:14px;border:1px solid rgba(255,255,255,0.03);transition:transform .45s,box-shadow .45s;transform-style:preserve-3d;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;inset:-2px;border-radius:16px;padding:2px;background:linear-gradient(90deg,var(--accent1),var(--accent2));mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);mask-composite:exclude;opacity:0;transform:scale(.98);transition:opacity .35s, transform .35s}
+.card:hover::before{opacity:1;transform:scale(1)}
+.card:hover{transform:translateY(-12px) rotateX(6deg) scale(1.03);box-shadow:0 38px 88px rgba(5,25,40,0.6)}
+.card h3{color:var(--accent1);margin-bottom:8px}
+.card p{color:var(--muted);font-size:14px}
+.card .icon{width:48px;height:48px;border-radius:10px;background:linear-gradient(45deg,rgba(255,255,255,0.02),transparent);display:flex;align-items:center;justify-content:center;margin-bottom:12px;transition:transform .36s cubic-bezier(.2,.9,.2,1)}
+.card:hover .icon{transform:translateY(-6px) rotate(-6deg) scale(1.08)}
+.card .cparticle{position:absolute;width:8px;height:8px;border-radius:50%;pointer-events:none;opacity:0;transform:translateY(0);mix-blend-mode:screen}
+@keyframes cPart{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-36px) scale(.3)}}
+
+/* subtle 3D tilt effect follower */
+.tilt{transition:transform .12s ease;will-change:transform}
+
+/* support */
+.support{max-width:900px;margin:40px auto;text-align:center}
+.support-card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:28px;border-radius:14px;border:1px solid rgba(255,255,255,0.03)}
+.discord-cta{display:inline-flex;align-items:center;gap:12px;padding:12px 18px;border-radius:999px;background:linear-gradient(90deg,#5865f2,#00d2ff);color:#fff;font-weight:800;margin-top:16px;text-decoration:none;box-shadow:0 10px 30px rgba(88,101,242,0.12);position:relative;overflow:hidden}
+.discord-cta .pulse{width:8px;height:8px;border-radius:999px;background:#fff;box-shadow:0 0 14px #fff;animation:ping 1.6s infinite}
+@keyframes ping{0%{transform:scale(.8);opacity:1}80%{transform:scale(1.9);opacity:0}100%{opacity:0}}
+
+/* footer */
+footer{padding:40px 20px;text-align:center;color:var(--muted)}
+
+/* responsive */
+@media(max-width:980px){.hero-inner{grid-template-columns:1fr}.download-card{order:2}.hero{padding-top:120px}.logo h1{display:none}.screenshot-viewport{height:120px}}
+
+@keyframes float{0%{transform:translateY(0)}50%{transform:translateY(-8px)}100%{transform:translateY(0)}}
+
+/* tiny sparkle particles over hero */
+.sparks{position:absolute;left:0;top:0;pointer-events:none;width:100%;height:100%;z-index:5}
+.spark{position:absolute;width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.9);opacity:0;transform:translateY(0);animation:twinkle 3s infinite}
+@keyframes twinkle{0%{opacity:0;transform:translateY(0) scale(.6)}10%{opacity:1}50%{opacity:0.2}100%{opacity:0;transform:translateY(-40px) scale(.4)}}
+
+/* typewriter */
+.typewrap{display:inline-block;position:relative}
+.typewrap .cursor{display:inline-block;width:3px;height:1.02em;background:var(--accent1);margin-left:6px;vertical-align:middle;animation:blink .8s steps(2) infinite}
+@keyframes blink{0%{opacity:1}50%{opacity:0}100%{opacity:1}}
+
+.fade-in{opacity:0;transform:translateY(18px);transition:opacity .7s,transform .7s}
+.fade-in.visible{opacity:1;transform:none}
+</style>
+</head>
+<body>
+  <div class="bg-blobs" aria-hidden="true">
+    <div class="blob a"></div>
+    <div class="blob b"></div>
+    <div class="blob c"></div>
+  </div>
+
+  <header id="site-header">
+    <div class="logo">
+      <div class="logo-badge">R</div>
+      <h1>RoSkidder</h1>
+    </div>
+    <nav>
+      <a href="#home" data-target="home">Home</a>
+      <a href="#features" data-target="features">Features</a>
+      <a href="#download-section" data-target="download">Download</a>
+      <a href="#support-section" data-target="support">Support</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="sparks" aria-hidden="true">
+        <!-- generate a few decorative sparks -->
+        <div class="spark" style="left:12%;top:28%;animation-delay:.2s"></div>
+        <div class="spark" style="left:28%;top:12%;animation-delay:1.1s"></div>
+        <div class="spark" style="left:66%;top:22%;animation-delay:.7s"></div>
+        <div class="spark" style="left:84%;top:40%;animation-delay:1.6s"></div>
+        <div class="spark" style="left:48%;top:6%;animation-delay:2s"></div>
+      </div>
+
+      <div class="hero-inner container">
+        <div>
+          <div class="title">The Future of Roblox Extensions</div>
+          <div class="subtitle">Clean UI · Fast Tools · Community-driven</div>
+          <div style="margin-top:12px;font-size:18px">
+            <span class="typewrap"> <span id="type-text" class="typewriter"></span><span class="cursor"></span></span>
+          </div>
+
+          <div class="cta-row" style="margin-top:18px">
+            <button class="btn btn-primary" id="download-cta">Download RoSkidder<span class="ripple"></span></button>
+            <button class="btn btn-ghost" id="cta-features">Explore features</button>
+          </div>
+
+          <div style="margin-top:18px;color:var(--muted);font-size:13px">Free preview • Demo page • Replace links with your installer and assets</div>
+        </div>
+
+        <aside class="download-card tilt" aria-labelledby="download-title">
+          <div class="app-name">
+            <div style="width:64px;height:64px;border-radius:14px;background:linear-gradient(90deg,var(--accent1),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:900;color:#02131b">R</div>
+            <div>
+              <h3 id="download-title">RoSkidder</h3>
+              <div class="meta">
+                <div>v1.2 • 5.8MB</div>
+                <div style="margin-left:6px;color:var(--muted)">• Trusted • Lightweight</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:14px;display:flex;gap:10px;align-items:center;justify-content:space-between">
+            <div style="color:var(--muted);font-size:13px">2.5k+ users • 4.6 avg rating</div>
+            <div>
+              <button class="btn btn-primary" id="download-main">Download</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="features" id="features">
+      <div class="container">
+        <h2>Powerful Features — Animated & Polished</h2>
+        <div class="feature-grid">
+          <div class="card fade-in tilt">
+            <div class="icon">⚡</div>
+            <h3>Trade Intelligence</h3>
+            <p>Realtime limited item tracking, smart profit predictions and instant alerts.</p>
+          </div>
+          <div class="card fade-in tilt">
+            <div class="icon">🧩</div>
+            <h3>Avatar Studio</h3>
+            <p>3D avatar preview, outfit layers and instant exports for socials.</p>
+          </div>
+          <div class="card fade-in tilt">
+            <div class="icon">📈</div>
+            <h3>Economy Charts</h3>
+            <p>Interactive graphs, historical trends and trend-detection markers.</p>
+          </div>
+          <div class="card fade-in tilt">
+            <div class="icon">🎨</div>
+            <h3>UI Overhaul</h3>
+            <p>Clean skins, compact menus and quick-key navigation for power users.</p>
+          </div>
+          <div class="card fade-in tilt">
+            <div class="icon">🚀</div>
+            <h3>Performance Tools</h3>
+            <p>FPS boost toggles, memory cleaner and per-game render tweaks.</p>
+          </div>
+          <div class="card fade-in tilt">
+            <div class="icon">🔒</div>
+            <h3>Privacy Guard</h3>
+            <p>Control visibility, block trackers, and manage online presence rules.</p>
+          </div>
+          <div class="card fade-in tilt">
+            <div class="icon">🔔</div>
+            <h3>Auto-Alerts</h3>
+            <p>Custom notifications for price drops, restocks and wishlist items.</p>
+          </div>
+          <div class="card fade-in tilt">
+            <div class="icon">🧰</div>
+            <h3>Quick Tools</h3>
+            <p>Instant RAP snapshots, reseller suggestions and quick calculators.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="download-section">
+      <div class="container" style="max-width:900px;margin:0 auto">
+        <div class="download-card" style="text-align:center">
+          <h2 style="background:linear-gradient(90deg,var(--accent1),var(--accent2));-webkit-background-clip:text;color:transparent">Download</h2>
+          <div style="margin-top:18px">
+            <button class="btn btn-primary" id="download-main-2">Download RoSkidder v1.2</button>
+            <div style="margin-top:10px;color:var(--muted);font-size:13px">File size: 5.8 MB </div>
+          </div>
+          <div style="margin-top:18px;display:flex;gap:12px;justify-content:center;align-items:center">
+            <div style="text-align:center">
+              <div style="font-weight:900;font-size:20px">4.6</div>
+              <div style="color:var(--muted);font-size:13px">Average Rating</div>
+            </div>
+            <div style="width:1px;height:40px;background:rgba(255,255,255,0.03)"></div>
+            <div style="text-align:center">
+              <div style="font-weight:900;font-size:20px">2.5k+</div>
+              <div style="color:var(--muted);font-size:13px">Users</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="support-section">
+      <div class="support container">
+        <div class="support-card">
+          <h2 style="background:linear-gradient(90deg,var(--accent1),var(--accent2));-webkit-background-clip:text;color:transparent">Support</h2>
+          <p class="small-note">Join the community to get beta access, developer Q&amp;A, and exclusive packs.</p>
+
+          <a class="discord-cta" href="#" id="discord-join">
+            <div class="pulse" style="width:10px;height:10px;border-radius:50%;background:#fff;margin-right:6px"></div>
+            Join RoSkidder Discord (Coming Soon!)
+          </a>
+
+          <div style="margin-top:12px;color:var(--muted)">Coming Soon — Support channels, beta sign-ups and special roles.</div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      © 2025 RoSkidder — Official page. Not affiliated with Roblox Corporation.
+    </footer>
+  </main>
+
+<script>
+// smooth scroll with offset for fixed header
+const header = document.getElementById('site-header');
+const offset = ()=> header.offsetHeight + 14;
+function smoothTo(id){
+  const el = document.getElementById(id);
+  if(!el) return window.scrollTo({top:0,behavior:'smooth'});
+  const y = el.getBoundingClientRect().top + window.pageYOffset - offset();
+  window.scrollTo({top: Math.max(y,0), behavior:'smooth'});
+}
+// attach to nav links
+document.querySelectorAll('nav a').forEach(a=>{
+  a.addEventListener('click', e=>{
+    e.preventDefault();
+    const target = a.getAttribute('data-target') || a.getAttribute('href').replace('#','');
+    smoothTo(target);
+  });
+});
+// hero CTA buttons
+document.getElementById('download-cta').addEventListener('click', ()=> smoothTo('download-section'));
+document.getElementById('cta-features').addEventListener('click', ()=> smoothTo('features'));
+
+// real download actions - replace URLs with your real file locations
+const downloadFiles = {
+  'download-main': {
+    url: 'https://example.com/path/RoSkidder-demo.exe', // ← replace with real URL
+    filename: 'RoSkidder-demo.exe'
+  },
+  'download-main-2': {
+    url: 'https://example.com/path/RoSkidder-setup.exe', // ← replace with real URL
+    filename: 'RoSkidder-setup.exe'
+  }
+};
+
+async function realDownload(url, filename){
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
+
+    // If the response has a readable stream, stream it so we can show progress
+    const contentLength = resp.headers.get('Content-Length');
+    if (!resp.body || typeof resp.body.getReader !== 'function') {
+      // no streaming support - fallback to blob()
+      const blob = await resp.blob();
+      triggerDownload(blob, filename);
+      alert(`${filename} download completed.`);
+      return;
+    }
+
+    const reader = resp.body.getReader();
+    const chunks = [];
+    let received = 0;
+    const total = contentLength ? parseInt(contentLength, 10) : null;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      received += value.length || value.byteLength || 0;
+      if (total) {
+        const pct = Math.round((received / total) * 100);
+        console.log(`Downloading ${filename}: ${pct}%`);
+        // optionally update some UI element here instead of console.log
+      } else {
+        console.log(`Downloading ${filename}: ${received} bytes received`);
+      }
+    }
+
+    const blob = new Blob(chunks);
+    triggerDownload(blob, filename);
+    alert(`${filename} download completed.`);
+  } catch (err) {
+    console.error('Download error:', err);
+    alert(`Download failed: ${err.message}\nMake sure the file URL is correct and the server allows CORS if it’s a different domain.`);
+  }
+}
+
+function triggerDownload(blob, filename){
+  const a = document.createElement('a');
+  const urlObj = URL.createObjectURL(blob);
+  a.href = urlObj;
+  a.download = filename || 'download';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  // revoke after a short delay to ensure download started in all browsers
+  setTimeout(() => URL.revokeObjectURL(urlObj), 5000);
+}
+
+// Attach listeners (no change to your HTML required)
+Object.keys(downloadFiles).forEach(btnId => {
+  const el = document.getElementById(btnId);
+  if (!el) {
+    console.warn(`Button with id "${btnId}" not found.`);
+    return;
+  }
+  el.addEventListener('click', (e) => {
+    e.preventDefault();
+    const meta = downloadFiles[btnId];
+    if (!meta || !meta.url) {
+      alert('No download URL configured for this button.');
+      return;
+    }
+    // Optional: confirm or show some UI
+    realDownload(meta.url, meta.filename);
+  });
+});
+
+// carousel logic
+let carousel = document.getElementById('carousel');
+let dots = document.querySelectorAll('.dot');
+let index = 0;
+function showSlide(i){
+  index = (i + 3) % 3; // keep in bounds
+  carousel.style.transform = `translateX(${-index * 33.333}%)`;
+  dots.forEach(d=>d.classList.remove('active'));
+  dots[index].classList.add('active');
+}
+dots.forEach(d=> d.addEventListener('click', ()=> showSlide(parseInt(d.dataset.index))));
+setInterval(()=> showSlide(index+1), 4200);
+
+// reveal on scroll for .fade-in
+const fades = document.querySelectorAll('.fade-in');
+function reveal(){
+  const t = window.innerHeight * 0.9;
+  fades.forEach((el,i)=>{ if(el.getBoundingClientRect().top < t) setTimeout(()=> el.classList.add('visible'), i*80); });
+}
+window.addEventListener('scroll', reveal); window.addEventListener('load', reveal); reveal();
+
+// 3D tilt on mouse for elements with .tilt
+function bindTilt(el, strength=12){
+  el.addEventListener('mousemove', e=>{
+    const rect = el.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    el.style.transform = `perspective(900px) rotateX(${ -y * strength }deg) rotateY(${ x * strength }deg) translateZ(0)`;
+  });
+  el.addEventListener('mouseleave', ()=> el.style.transform='none');
+}
+document.querySelectorAll('.tilt').forEach(el=> bindTilt(el,8));
+
+// simple typewriter cycling
+const phrases = ['Smart trade alerts', 'Avatar previews in 3D', 'Market graphs & insights', 'Privacy-first settings'];
+const typeEl = document.getElementById('type-text');
+let pi=0,ti=0;
+function typeLoop(){
+  const str = phrases[pi];
+  if(ti <= str.length){ typeEl.textContent = str.slice(0,ti); ti++; setTimeout(typeLoop, 60); }
+  else { setTimeout(()=> eraseLoop(), 900); }
+}
+function eraseLoop(){
+  const str = phrases[pi];
+  if(ti >= 0){ typeEl.textContent = str.slice(0,ti); ti--; setTimeout(eraseLoop, 30); }
+  else { pi = (pi+1) % phrases.length; setTimeout(typeLoop, 200); }
+}
+setTimeout(typeLoop, 600);
+
+// subtle parallax for blobs following mouse
+const blobs = document.querySelectorAll('.blob');
+window.addEventListener('mousemove', e=>{
+  const x = e.clientX / window.innerWidth - 0.5;
+  const y = e.clientY / window.innerHeight - 0.5;
+  blobs.forEach((b,i)=>{ const mv = (i+1)*10; b.style.transform = `translate(${x*mv}px, ${y*mv}px)`; });
+});
+
+// discord CTA placeholder
+const discordJoin = document.getElementById('discord-join');
+if(discordJoin) discordJoin.addEventListener('click', e=>{ e.preventDefault(); alert('Discord coming soon — replace this with your invite link.');
+});
+
+// ----- NEW: Animated micro-interactions for buttons and features -----
+// create particle helper
+function spawnParticle(x,y,color,parent,opts={size:6,duration:700}){
+  const p = document.createElement('span');
+  p.className = 'particle';
+  p.style.left = (x - opts.size/2) + 'px';
+  p.style.top = (y - opts.size/2) + 'px';
+  p.style.width = opts.size + 'px';
+  p.style.height = opts.size + 'px';
+  p.style.background = color;
+  p.style.opacity = '1';
+  parent.appendChild(p);
+   p.animate([
+    { transform: 'translateY(0) scale(1)', opacity: 1 },
+    { transform: 'translateY(-28px) scale(0.4)', opacity: 0 }
+  ], { duration: opts.duration, easing: 'ease-out' });
+  setTimeout(() => p.remove(), opts.duration);
+}
+
+// attach spark particle on button hover
+document.querySelectorAll('.btn-primary, .btn-ghost').forEach(btn => {
+  btn.addEventListener('mousemove', e => {
+    const rect = btn.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const color = getComputedStyle(btn).backgroundImage.includes('gradient')
+      ? 'rgba(255,255,255,0.3)'
+      : 'rgba(255,255,255,0.15)';
+    spawnParticle(x, y, color, btn, { size: 6 + Math.random() * 4, duration: 600 + Math.random() * 300 });
+  });
+});
+
+// small sparkle particles for feature cards
+document.querySelectorAll('.card').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    if (Math.random() < 0.3) {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      spawnParticle(x, y, 'rgba(255,255,255,0.25)', card, { size: 4 + Math.random() * 3, duration: 700 });
+    }
+  });
+});
+
+// feature card hover particles + small icon bounce
+document.querySelectorAll('.card').forEach(card=>{
+  card.addEventListener('mouseenter', e=>{
+    card.classList.add('active');
+    // spawn randomized sparkles
+    const rect = card.getBoundingClientRect();
+    for(let i=0;i<6;i++){
+      const rx = Math.random()*rect.width;
+      const ry = Math.random()*rect.height*0.6; // upper area
+      const col = i%2===0? '#9be6ff' : '#d6b8ff';
+      // position relative to card
+      spawnParticle(rx, ry, col, card, {size:8, duration:700});
+    }
+  });
+  card.addEventListener('mouseleave', e=>{ card.classList.remove('active'); });
+});
+
+// small UI nicety: animated focus for nav links
+document.querySelectorAll('nav a').forEach(a=>{
+  a.addEventListener('mouseenter', ()=> a.style.transform='translateY(-4px)');
+  a.addEventListener('mouseleave', ()=> a.style.transform='');
+});
+
+</script>
+</body>
+</html>
